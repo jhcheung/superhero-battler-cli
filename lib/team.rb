@@ -6,6 +6,10 @@ class Team < ActiveRecord::Base
     
     has_many :drafts
     has_many :fighters, through: :drafts
+
+    def my_teams
+        #show names of all team
+    end
     
 end
 
