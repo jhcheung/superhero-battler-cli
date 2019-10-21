@@ -24,6 +24,12 @@ ActiveRecord::Schema.define(version: 2019_10_21_194529) do
 
   create_table "fighters", force: :cascade do |t|
     t.string "name"
+    t.integer "intelligence"
+    t.integer "strength"
+    t.integer "speed"
+    t.integer "durability"
+    t.integer "power"
+    t.integer "combat"
   end
 
   create_table "players", force: :cascade do |t|
