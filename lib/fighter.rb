@@ -3,7 +3,7 @@ class Fighter < ActiveRecord::Base
     has_many :teams, through: :drafts
 
     def superhero_image_dir
-        "./imgs/#{self.id}"
+        "./imgs/#{self.id}.jpg"
     end
 
     def print_fighter_image
