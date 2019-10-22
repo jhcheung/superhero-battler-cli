@@ -7,10 +7,26 @@ class Team < ActiveRecord::Base
     has_many :drafts
     has_many :fighters, through: :drafts
 
-    def my_teams
-        #show names of all team
+    def set_team_name
+        team_names = drafts.map { |draft| draft.fighter.name }
+        team_names.sort
+        self.name = team_names.join(" | ")  
+        save      
     end
     
+    def set_last_team
+        players_teams = self.player.teams
+        players_teams.each do |player_team|
+            if player_team.last_team
+                player_team.last_team = false
+                player_team.save
+            end 
+        end
+        self.last_team = true
+        self.save
+    end
+
+
 end
 
 

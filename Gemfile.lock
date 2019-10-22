@@ -104,6 +104,7 @@ DEPENDENCIES
   down
   faker
   fileutils
+  pastel
   pry
   rake
   require_all
