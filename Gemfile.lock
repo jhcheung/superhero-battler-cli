@@ -12,6 +12,8 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.1, >= 2.1.8)
+    addressable (2.7.0)
+      public_suffix (>= 2.0.2, < 5.0)
     catpix (0.2.0)
       docopt (~> 0.5, >= 0.5.0)
       rmagick (~> 2.15, >= 2.15.2)
@@ -23,9 +25,12 @@ GEM
     docopt (0.6.1)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    down (5.0.0)
+      addressable (~> 2.5)
     equatable (0.6.1)
     faker (2.6.0)
       i18n (>= 1.6, < 1.8)
+    fileutils (1.3.0)
     http-accept (1.7.0)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -45,6 +50,7 @@ GEM
     pry (0.12.2)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
+    public_suffix (4.0.1)
     rack (2.0.7)
     rack-protection (2.0.7)
       rack
@@ -95,11 +101,14 @@ DEPENDENCIES
   activerecord
   catpix
   colorize
+  down
   faker
+  fileutils
   pry
   rake
   require_all
   rest-client
+  rmagick
   sinatra-activerecord
   sqlite3 (~> 1.4)
   tty-prompt

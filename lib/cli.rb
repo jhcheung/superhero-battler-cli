@@ -1,21 +1,34 @@
 class CLI
+    attr_accessor :prompt
+
+
     def greet 
         puts "Welcome to Jimmy and Nick's Superhero Battle App!"
     end
 
     def start_program
-        puts "Enter your name to log in, or enter \"create\" to create a new player > "
-        user_input = gets.chomp
-        if user_input == "create" 
-            puts "Enter your name >"
-            Player.create(name: user_input)
-            show_teams_prompt
-        elsif Player.find_by(name: user_input)
+        @prompt = TTY::Prompt.new
+        user_response = username_prompt
+        case 
+        when user_response == "create" 
+            create_username_prompt
+            menu_prompt
+        when Player.find_by(name: user_response)
             menu_prompt
         else
-            puts "Not a valid player name, create new user >"
-            create_player
+            puts "Not a valid player name, please create a new username"
+            create_username_prompt
+            menu_prompt
         end
+    end
+
+    def username_prompt
+        prompt.ask("Enter your name to log in, or enter \"create\" to create a new player")
+    end
+
+    def create_username_prompt
+        name = prompt.ask("Enter your name:")
+        Player.create(name: name)
     end
 
     # def show_teams_prompt
@@ -25,10 +38,8 @@ class CLI
     # end
 
     def menu_prompt
-        teams = Team.all.map {|team| team.name}
-        prompt = TTY::Prompt.new
-        prompt.select("Menu >", ["Battle", "My Teams", "Leaderboard", "Exit"])
-        case prompt
+        menu_response = prompt.select("Menu >", ["Battle", "My Teams", "Leaderboard", "Exit"])
+        case menu_response
         when "Battle" 
             #battle function
         when "My Teams"
@@ -36,8 +47,13 @@ class CLI
         when "Leaderboard"
             #leaderboard function
         when "Exit"
-            #exit function
+            goodbye
         end
+    end
+
+    def goodbye
+        puts "Sad to see you go! Goodbye!"
+        :exit
     end
 
 end
