@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_22_160542) do
+ActiveRecord::Schema.define(version: 2019_10_22_194151) do
 
   create_table "battles", force: :cascade do |t|
     t.integer "team_id"
     t.integer "opponent_id"
+    t.integer "winner_id"
   end
 
   create_table "drafts", force: :cascade do |t|

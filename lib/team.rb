@@ -17,9 +17,13 @@ class Team < ActiveRecord::Base
     def set_last_team
         players_teams = self.player.teams
         players_teams.each do |player_team|
-            player_team.last_team = false
+            if player_team.last_team
+                player_team.last_team = false
+                player_team.save
+            end 
         end
         self.last_team = true
+        self.save
     end
 
 

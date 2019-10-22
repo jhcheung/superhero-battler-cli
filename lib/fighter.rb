@@ -7,7 +7,7 @@ class Fighter < ActiveRecord::Base
     end
 
     def print_fighter_image
-        Catpix.print_image("./imgs/#{self.id}.jpg", {limit_x: 1, limit_y: 1, resolution: "high"})
+        Catpix.print_image(superhero_image_dir, {limit_x: 1, limit_y: 1, resolution: "high"})
     end
 
     def self.print_composite_image(id1, id2, id3)
