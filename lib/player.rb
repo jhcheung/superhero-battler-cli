@@ -22,12 +22,12 @@ class Player < ActiveRecord::Base
         # end
     # end
        
-    def self.create_player
-        puts "Enter your name >"
-        user_input = gets.chomp
-        new_player = Player.new(name: user_input)
-        puts new_player.name
-    end
+    # def self.create_player
+    #     puts "Enter your name >"
+    #     user_input = gets.chomp
+    #     new_player = Player.new(name: user_input)
+    #     puts new_player.name
+    # end
     
 end
 
