@@ -47,7 +47,7 @@ class CLI
     def create_player_name_prompt
         user_response = prompt.ask("Enter your name:")
         if Player.find_by(name: user_response)
-            puts "#{user_reseponse} is already a user! Please try again."
+            puts "#{user_response} is already a user! Please try again."
             login_create_process
         else
             Player.create(name: user_response)
@@ -65,7 +65,8 @@ class CLI
         menu_response = prompt.select("Your team is currently #{@pastel.red(current_team.name)} >", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) if current_team
         case menu_response
         when "Battle" 
-            battle_menu
+            battle_menu if current_team
+            puts "You do not currently have a team! Please create one before battling agin." unless current_team
         when "My Teams"
             my_teams_menu
         when "Leaderboard"
@@ -96,7 +97,7 @@ class CLI
             puts "404 not found"
         end
 
-        Fighter.print_composite_image(current_team.drafts[0].fighter_id, current_team.drafts[1].fighter_id, current_team.drafts[2].fighter_id) if current_team.drafts.count == 3
+        current_team.print_composite if current_team.drafts.count == 3
         create_team_menu unless current_team.drafts.count == 3
     end
 
