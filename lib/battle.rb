@@ -9,6 +9,7 @@ class Battle < ActiveRecord::Base
         end
         test_results.count(true) > test_results.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
         self.save
+        self.winner_id
     end
 
     def competition_hash
