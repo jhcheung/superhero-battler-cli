@@ -1,16 +1,19 @@
 class CLI
     attr_accessor :prompt, :logged_in, :current_player, :current_team
 
-    def greet 
-        greeting = RubyFiglet::Figlet.new "Jimmy  and  Nick's\n Superhero  Battle  App!"
-        puts greeting
+    def clear_cli
+        puts "\e[H\e[2J"
+    end
+
+    def greet
+        clear_cli
+        puts "Welcome to Jimmy and Nick's Superhero Battle App!"
     end
 
     def start_program
         @prompt = TTY::Prompt.new
         @pastel = Pastel.new
         login_create_process
-        login_routine
         while @logged_in
             menu_prompt 
         end
@@ -21,18 +24,17 @@ class CLI
         case 
         when user_response == "create" 
             create_player_name_prompt
-            @logged_in = true
         when Player.find_by(name: user_response)
-            @logged_in = true
             set_current_player(user_response)
+            login_routine
         else
             puts "Not a valid player name, maybe create a new user 🤷 >"
             create_player_name_prompt
-            @logged_in = true
         end
     end
 
     def login_routine
+        @logged_in = true
         check_current_team
     end
 
@@ -50,9 +52,15 @@ class CLI
             puts "#{user_response} is already a user! Please try again."
             login_create_process
         else
-            Player.create(name: user_response)
-            set_current_player(user_response)
+            create_player(user_response)
         end
+    end
+
+    def create_player(user_response)
+        Player.create(name: user_response)
+        set_current_player(user_response)
+        login_routine
+
     end
 
     def check_current_team
@@ -61,8 +69,9 @@ class CLI
 
 
     def menu_prompt
-        menu_response = prompt.select("Menu >", ["Battle", "My Teams", "Leaderboard", "Log Out", "Exit"]) unless current_team
-        menu_response = prompt.select("Your team is currently #{@pastel.red(current_team.name)} >", ["Battle", "My Teams", "Leaderboard", "Log Out", "Exit"]) if current_team
+        menu_response = prompt.select("Menu", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) unless current_team
+        menu_response = prompt.select("You are currently logged in as #{current_player.name}.\nYour current team is #{@pastel.green(current_team.name)}", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) if current_team
+
         case menu_response
         when "Battle" 
             battle_menu if current_team
@@ -103,8 +112,8 @@ class CLI
     end
 
     def my_teams_menu
-        menu_response = prompt.select("Manage your Teams >", ["Create a team", current_player_teams], "Delete", "Cancel"  ) if !current_team
-        menu_response = prompt.select("Manage your Teams >", ["Create a team", @pastel.blue(current_team.name), current_player_teams_without_current_team ], "Delete", "Cancel"  ) if current_team
+        menu_response = prompt.select("Manage your Teams", ["Create a team", current_player_teams], "Delete", "Cancel"  ) if !current_team
+        menu_response = prompt.select("Manage your Teams", ["Create a team", @pastel.blue(current_team.name), current_player_teams_without_current_team ], "Delete", "Cancel"  ) if current_team
         if menu_response == "Create a team"
             puts "Your team will consist of three heroes/villains!"
             @current_team = Team.create(name: "")
@@ -142,7 +151,7 @@ class CLI
     end
 
     def battle_player_menu
-        menu_response = prompt.select("Choose a player", [Player.pluck(:name) - [current_player.name] ], "Cancel")
+        menu_response = prompt.select("Choose a player", [Player.players_with_teams.pluck(:name) - [current_player.name] ], "Cancel")
         @battle_player_instance = Player.find_by(name: menu_response)
         case menu_response
         when "Cancel"
@@ -166,15 +175,13 @@ class CLI
         battlehash = battle.competition_hash
 
         test1 = battlehash.keys.sample
-        announce_test_winner(battle, test1)
-
         test2 = (battlehash.keys - [test1]).sample
-        announce_test_winner(battle, test2)
-
         test3 = (battlehash.keys - [test1, test2]).sample
-        announce_test_winner(battle, test3)
-
-        winner_id = battle.determine_winner(test1, test2, test3)
+        results = battle.determine_winner(test1, test2, test3)
+        announce_test_winner(results, battle, test1)
+        announce_test_winner(results, battle, test2)
+        announce_test_winner(results, battle, test3)
+        winner_id = battle.winner_id
         winner = Team.find(winner_id)
 
         if winner == current_team
@@ -185,10 +192,9 @@ class CLI
         winner
     end
 
-    def announce_test_winner(battle, test)
-        battlehash = battle.competition_hash
+    def announce_test_winner(results, battle, test)
         battle_proclamation(test, battle.opponent)
-        if battlehash[test]
+        if results[test]
             testwinner = battle.team 
             puts "#{@pastel.green(testwinner.name)} has won this test of #{test}!"
         else 
@@ -207,10 +213,11 @@ class CLI
             puts "You have nothing to delete!"
             my_teams_menu
         elsif
-            delete_team = prompt.select("Delete a team", [@pastel.red(current_team.name), current_player_teams_without_current_team, "Cancel"])
-            if delete_team == "Cancel"
+            delete_team = prompt.select("Delete a Team", [@pastel.red(current_team.name), current_player_teams_without_current_team, "Cancel"])
+            case delete_team 
+            when "Cancel"
                 my_teams_menu
-            elsif delete_team == current_team.name 
+            when current_team.name 
                 puts "You can't delete your currently selected team!"
                 delete_menu
             else
@@ -238,14 +245,14 @@ class CLI
 
     def logout
         @logged_in = false
-        puts "\e[H\e[2J"
+        clear_cli
         puts "You have successfully logged out!"
         start_program
     end
 
     def goodbye
-        puts "\e[H\e[2J"
-        puts "Sad to see you go! Goodbye! ✌️"
+        clear_cli
+        puts "Sad to see you go! Goodbye!"
         @logged_in = false
     end
 
