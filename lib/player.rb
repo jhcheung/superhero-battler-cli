@@ -13,5 +13,13 @@ class Player < ActiveRecord::Base
     def self.team_ids
         teams.map { |team| team.id } 
     end
+
+    def self.names
+        self.pluck(:names)
+    end
+
+    def self.players_with_teams
+        self.all.select { |player| player.teams.count > 0 }        
+    end
 end
 
