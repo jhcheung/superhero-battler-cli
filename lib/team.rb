@@ -29,9 +29,4 @@ class Team < ActiveRecord::Base
 
 end
 
-
-
     
-# has_many :battles, foreign_key: opponent_id, class_name: 'Battle'
-# has_many :opponents, through: :battles
-# has_many :userteams, through: :battles

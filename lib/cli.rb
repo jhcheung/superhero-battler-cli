@@ -26,7 +26,7 @@ class CLI
             @logged_in = true
             set_current_player(user_response)
         else
-            puts "Not a valid player name, please create a new username"
+            puts "Not a valid player name, maybe create a new user 🤷 >"
             create_player_name_prompt
             @logged_in = true
         end
@@ -41,11 +41,11 @@ class CLI
     end
 
     def player_name_prompt
-        prompt.ask("Enter your name to log in, or enter \"create\" to create a new player")
+        prompt.ask("Enter your name to log in, or enter \"create\" to create a new player >")
     end
 
     def create_player_name_prompt
-        user_response = prompt.ask("Enter your name:")
+        user_response = prompt.ask("Enter your name >")
         if Player.find_by(name: user_response)
             puts "#{user_reseponse} is already a user! Please try again."
             login_create_process
@@ -61,8 +61,8 @@ class CLI
 
 
     def menu_prompt
-        menu_response = prompt.select("Menu >", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) unless current_team
-        menu_response = prompt.select("Your team is currently #{@pastel.red(current_team.name)} >", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) if current_team
+        menu_response = prompt.select("Menu >", ["Battle", "My Teams", "Leaderboard", "Log Out", "Exit"]) unless current_team
+        menu_response = prompt.select("Your team is currently #{@pastel.red(current_team.name)} >", ["Battle", "My Teams", "Leaderboard", "Log Out", "Exit"]) if current_team
         case menu_response
         when "Battle" 
             battle_menu
@@ -70,7 +70,7 @@ class CLI
             my_teams_menu
         when "Leaderboard"
             #leaderboard function
-        when "Logout"
+        when "Log Out"
             logout
         when "Exit"
             goodbye
@@ -86,7 +86,7 @@ class CLI
     end
 
     def create_team_menu
-        fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or random for a surprise.")
+        fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or \"random\" for a surprise.")
         fighter = Fighter.find_by("LOWER(fighters.name)= ? ", fighter_response.downcase)
         if fighter_response == "random"
             Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
@@ -96,13 +96,13 @@ class CLI
             puts "404 not found"
         end
 
-        Fighter.print_composite_image(current_team.drafts[0].fighter_id, current_team.drafts[1].fighter_id, current_team.drafts[2].fighter_id) if current_team.drafts.count == 3
+        #Fighter.print_composite_image(current_team.drafts[0].fighter_id, current_team.drafts[1].fighter_id, current_team.drafts[2].fighter_id) if current_team.drafts.count == 3
         create_team_menu unless current_team.drafts.count == 3
     end
 
     def my_teams_menu
-        menu_response = prompt.select("Manage your Teams >", ["Create a team", current_player_teams], "Delete", "Cancel"  ) if !current_team
-        menu_response = prompt.select("Manage your Teams >", ["Create a team", @pastel.red(current_team.name), current_player_teams_without_current_team ], "Delete", "Cancel"  ) if current_team
+        menu_response = prompt.select("Manage your teams >", ["Create a team", current_player_teams], "Delete", "Cancel"  ) if !current_team
+        menu_response = prompt.select("Manage your teams >", ["Create a team", @pastel.red(current_team.name), current_player_teams_without_current_team ], "Delete", "Cancel"  ) if current_team
         if menu_response == "Create a team"
             puts "Your team will consist of three heroes/villains!"
             @current_team = Team.create(name: "")
@@ -129,9 +129,9 @@ class CLI
             winner_id = conduct_battle(current_team, opponent_team)
             winner = Team.find(winner_id)
             if winner == current_team
-                puts "You have won! Congrats!"
+                puts "You've won! Congrats! 🎉🍾"
             else 
-                puts "You were defeated. Better luck next time."
+                puts "You were defeated. 😢 Better luck next time."
             end
         end
     end
@@ -158,7 +158,7 @@ class CLI
     end
         
     def battle_proclamation(key, opp)
-        puts "Your team of #{current_team.name} are facing #{opp.name} in a test of #{key}!"   
+        puts "Your team of #{current_team.name} is facing #{opp.name} in a test of #{key}!"   
     end
     
 
@@ -167,14 +167,14 @@ class CLI
             puts "You have nothing to delete!"
             my_teams_menu
         elsif
-            delete_team = prompt.select("Delete a Team", [@pastel.red(current_team.name), current_player_teams_without_current_team, "Cancel"])
+            delete_team = prompt.select("Delete a team", [@pastel.red(current_team.name), current_player_teams_without_current_team, "Cancel"])
             if delete_team == "Cancel"
                 my_teams_menu
             elsif delete_team == current_team.name 
                 puts "You can't delete your currently selected team!"
                 delete_menu
             else
-                confirmation = prompt.yes?('Are you sure?')
+                confirmation = prompt.yes?('Are you sure?!?!')
                 if confirmation
                     team = Team.find_by(name: delete_team)
                     Team.destroy(team.id)
@@ -191,7 +191,7 @@ class CLI
     end
 
     def goodbye
-        puts "Sad to see you go! Goodbye!"
+        puts "Sad to see you go! Goodbye! 👋✌️"
         @logged_in = false
     end
 
