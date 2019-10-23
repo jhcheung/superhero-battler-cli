@@ -4,12 +4,11 @@ class Battle < ActiveRecord::Base
 
     def determine_winner(test1, test2, test3)
         test_results = [test1, test2, test3]
-        test_results.map do |test|
+        test_results = test_results.map do |test|
             self.competition_hash[test]
         end
         test_results.count(true) > test_results.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
         self.save
-        winner_id
     end
 
     def competition_hash
@@ -71,6 +70,14 @@ class Battle < ActiveRecord::Base
         com = team.fighters.reduce(0) { |sum, fighter| sum + fighter[:combat]}
         opp_com = opponent.fighters.sum(&:combat)
         com >= opp_com ? true : false
+    end
+
+    def self.player_battles_won
+        self.all.select { |battle| battle.team_id == battle.winner_id }
+    end
+
+    def self.player_battles_won_team_ids
+        player_battles_won.map { |battle| battle.team_id }
     end
 
 
