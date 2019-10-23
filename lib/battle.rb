@@ -3,12 +3,14 @@ class Battle < ActiveRecord::Base
     belongs_to :opponent, class_name: 'Team'
 
     def determine_winner(test1, test2, test3)
-        test_results = [test1, test2, test3]
-        test_results = test_results.map do |test|
-            self.competition_hash[test]
+        test_results = { test1 => nil, test2 => nil, test3 => nil }
+        test_results = test_results.reduce({}) do |new_hash, (key, value)|
+            new_hash[key] = self.competition_hash[key]
+            new_hash
         end
-        test_results.count(true) > test_results.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
+        test_results.values.count(true) > test_results.values.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
         self.save
+        test_results
     end
 
     def competition_hash
