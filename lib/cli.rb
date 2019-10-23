@@ -47,7 +47,7 @@ class CLI
     def create_player_name_prompt
         user_response = prompt.ask("Enter your name >")
         if Player.find_by(name: user_response)
-            puts "#{user_reseponse} is already a user! Please try again."
+            puts "#{user_response} is already a user! Please try again."
             login_create_process
         else
             Player.create(name: user_response)
@@ -65,12 +65,19 @@ class CLI
         menu_response = prompt.select("Your team is currently #{@pastel.red(current_team.name)} >", ["Battle", "My Teams", "Leaderboard", "Log Out", "Exit"]) if current_team
         case menu_response
         when "Battle" 
-            battle_menu
+            battle_menu if current_team
+            puts "You do not currently have a team! Please create one before battling again." unless current_team
         when "My Teams"
             my_teams_menu
         when "Leaderboard"
+<<<<<<< HEAD
             #leaderboard function
         when "Log Out"
+=======
+            leaderboard_menu if Team.all.any?
+            puts "There have been no battles! You need to battle first for there to be a leaderboard." unless Team.all.any?
+        when "Logout"
+>>>>>>> caa7d85a18307434c2811fd826b34efa2ab5838f
             logout
         when "Exit"
             goodbye
@@ -96,13 +103,22 @@ class CLI
             puts "404 not found"
         end
 
+<<<<<<< HEAD
         #Fighter.print_composite_image(current_team.drafts[0].fighter_id, current_team.drafts[1].fighter_id, current_team.drafts[2].fighter_id) if current_team.drafts.count == 3
+=======
+        current_team.print_composite if current_team.drafts.count == 3
+>>>>>>> caa7d85a18307434c2811fd826b34efa2ab5838f
         create_team_menu unless current_team.drafts.count == 3
     end
 
     def my_teams_menu
+<<<<<<< HEAD
         menu_response = prompt.select("Manage your teams >", ["Create a team", current_player_teams], "Delete", "Cancel"  ) if !current_team
         menu_response = prompt.select("Manage your teams >", ["Create a team", @pastel.red(current_team.name), current_player_teams_without_current_team ], "Delete", "Cancel"  ) if current_team
+=======
+        menu_response = prompt.select("Manage your Teams >", ["Create a team", current_player_teams], "Delete", "Cancel"  ) if !current_team
+        menu_response = prompt.select("Manage your Teams >", ["Create a team", @pastel.blue(current_team.name), current_player_teams_without_current_team ], "Delete", "Cancel"  ) if current_team
+>>>>>>> caa7d85a18307434c2811fd826b34efa2ab5838f
         if menu_response == "Create a team"
             puts "Your team will consist of three heroes/villains!"
             @current_team = Team.create(name: "")
@@ -115,17 +131,20 @@ class CLI
         elsif menu_response == "Cancel"
             #doing nothing returns to main menu
         else 
-            @current_team = Team.find_by(name: menu_response)
+            @current_team = Team.find_by(name: @pastel.strip(menu_response))
             current_team.set_last_team
         end
     end
 
     def battle_menu
-        menu_response = prompt.select("Choose a mode", "Random")
+        menu_response = prompt.select("Choose a mode", ["Choose a player", "Random"])
         case menu_response
+        when "Choose a player"
+            battle_player_menu
         when "Random"
-            random_opponent_id = Player.player_ids_with_teams.sample
+            random_opponent_id = (Player.player_ids_with_teams - [current_player.id]).sample
             opponent_team = Player.find(random_opponent_id).teams.sample
+<<<<<<< HEAD
             winner_id = conduct_battle(current_team, opponent_team)
             winner = Team.find(winner_id)
             if winner == current_team
@@ -133,33 +152,82 @@ class CLI
             else 
                 puts "You were defeated. 😢 Better luck next time."
             end
+=======
+            puts "Your team is #{@pastel.green(current_team.name)}!"
+            conduct_battle(current_team, opponent_team)
+            # winner = Team.find(winner_id)
+            # if winner == current_team
+            #     puts "You have won! Congrats!"
+            # else 
+            #     puts "You were defeated. Better luck next time."
+            # end
+        end
+    end
+
+    def battle_player_menu
+        menu_response = prompt.select("Choose a player", [Player.pluck(:name) - [current_player.name] ], "Cancel")
+        @battle_player_instance = Player.find_by(name: menu_response)
+        case menu_response
+        when "Cancel"
+
+        else
+            player_menu(menu_response)     
+        end
+    end
+
+    def player_menu(player_name)
+        menu_response = prompt.select("Choose a team", [Player.find_by(name: player_name).teams.pluck(:name)], "Cancel")
+        case menu_response
+        when "Cancel"
+        else 
+            conduct_battle(current_team, Team.find_by(player: @battle_player_instance, name: menu_response))
+>>>>>>> caa7d85a18307434c2811fd826b34efa2ab5838f
         end
     end
 
     def conduct_battle(team, opponent)
         battle = Battle.create(team: team, opponent: opponent)
+        battlehash = battle.competition_hash
 
-        test1 = battle.competition_hash.keys.sample
-        puts battle_proclamation(test1, opponent)
-        battle[test1] ? test1winner = team : test1winner = opponent
-        puts "#{test1winner.name} has won this test of #{test1}!"
+        test1 = battlehash.keys.sample
+        announce_test_winner(battle, test1)
 
-        test2 = (battle.competition_hash.keys - [test1]).sample
-        puts battle_proclamation(test2, opponent)
-        battle[test2] ? test2winner = team : test2winner = opponent
-        puts "#{test2winner.name} has won this test of #{test2}!"
+        test2 = (battlehash.keys - [test1]).sample
+        announce_test_winner(battle, test2)
 
-        test3 = (battle.competition_hash.keys - [test1, test2]).sample
-        puts battle_proclamation(test3, opponent)
-        battle[test3] ? test3winner = team : test3winner = opponent
-        puts "#{test3winner.name} has won this test of #{test3}!"
-        
-        battle.determine_winner(test1, test2, test3)
+        test3 = (battlehash.keys - [test1, test2]).sample
+        announce_test_winner(battle, test3)
+
+        winner_id = battle.determine_winner(test1, test2, test3)
+        winner = Team.find(winner_id)
+
+        if winner == current_team
+            puts @pastel.green("You have won! Congratulations!")
+        else 
+            puts @pastel.red("You were defeated. Better luck next time.")
+        end
+
+        winner
     end
         
+
+    def announce_test_winner(battle, test)
+        battlehash = battle.competition_hash
+        battle_proclamation(test, battle.opponent)
+        if battlehash[test]
+            testwinner = battle.team 
+            puts "#{@pastel.green(testwinner.name)} has won this test of #{test}!"
+        else 
+            testwinner = battle.opponent
+            puts "#{@pastel.red(testwinner.name)} has won this test of #{test}!"
+        end
+        testwinner
+    end
+    
     def battle_proclamation(key, opp)
         puts "Your team of #{current_team.name} is facing #{opp.name} in a test of #{key}!"   
     end
+
     
 
     def delete_menu
@@ -185,13 +253,32 @@ class CLI
     end
 
 
+    def leaderboard_menu
+        menu_response = prompt.select("Choose a leaderboard", "Team", "Player", "Back")
+        case menu_response
+        when "Team"
+            puts Leaderboard.new.render_table("construct_team_leaderboard")
+        when "Player"
+            puts Leaderboard.new.render_table("construct_player_leaderboard")
+        when "Back"
+            #doing nothing returns to while loop
+        end
+    end
+
     def logout
         @logged_in = false
+        puts "\e[H\e[2J"
+        puts "You have successfully logged out!"
         start_program
     end
 
     def goodbye
+<<<<<<< HEAD
         puts "Sad to see you go! Goodbye! 👋✌️"
+=======
+        puts "\e[H\e[2J"
+        puts "Sad to see you go! Goodbye!"
+>>>>>>> caa7d85a18307434c2811fd826b34efa2ab5838f
         @logged_in = false
     end
 

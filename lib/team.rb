@@ -26,7 +26,28 @@ class Team < ActiveRecord::Base
         self.save
     end
 
+    def print_composite
+        Fighter.print_composite_image(self.fighters[0], self.fighters[1], self.fighters[2])
+    end
+
+    # def self.execute_sql(*sql_array)     
+    #     connection.execute(send(:sanitize_sql_array, sql_array))
+    # end
+
+
+<<<<<<< HEAD
+    
+=======
+
 
 end
 
+
+#notes
+#use tty table in iteration
+# iterate over all battles and check count.
     
+# has_many :battles, foreign_key: opponent_id, class_name: 'Battle'
+# has_many :opponents, through: :battles
+# has_many :userteams, through: :battles
+>>>>>>> caa7d85a18307434c2811fd826b34efa2ab5838f

@@ -9,5 +9,9 @@ class Player < ActiveRecord::Base
     def self.player_ids_with_teams
         players_with_teams.map { |player| player.id }
     end
+
+    def self.team_ids
+        teams.map { |team| team.id } 
+    end
 end
 
