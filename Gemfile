@@ -19,4 +19,5 @@ gem "pastel"
 gem "seed_dump"
 gem "tty-table"
 gem "ruby_figlet", "~> 0.6.1"
-gem "lolcat"
+
+
