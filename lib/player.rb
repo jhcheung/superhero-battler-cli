@@ -2,8 +2,8 @@ class Player < ActiveRecord::Base
     has_many :teams
     has_many :battles
 
-    def wins
-        Battle.player_battles_won_team_ids.select { |team_id| team_ids.include?(team_id) }
+    def wins_count
+        teams.sum(&:player_wins_count) 
     end
 
     def self.players_with_teams
@@ -25,5 +25,10 @@ class Player < ActiveRecord::Base
     def self.players_with_teams
         self.all.select { |player| player.teams.count > 0 }        
     end
+
+    def delete_everything
+        
+    end
+
 end
 

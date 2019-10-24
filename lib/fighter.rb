@@ -23,7 +23,26 @@ class Fighter < ActiveRecord::Base
         end
         image_list.write("./imgs/#{f1.id}_#{f2.id}_#{f3.id}.png")
         Catpix.print_image("./imgs/#{f1.id}_#{f2.id}_#{f3.id}.png", {limit_x: 0.90, limit_y: 0.90, resolution: "high"})
+    end
 
+    def drafts
+        Draft.select { |draft| draft.fighter == self }
+    end
+
+    def team_ids
+        drafts.map { |draft| draft.team.id }
+    end
+
+    def wins_count
+        # Battle.includes(team: [:fighters]).select do |battle| 
+        #     team_ids.include?(battle.winner_id) 
+        # end
+        teams.sum(&:wins_count)
+    end
+
+    def self.fighters_with_wins
+
+            Battle.wins_find_by_fighter()
     end
 
 end

@@ -7,6 +7,23 @@ class Team < ActiveRecord::Base
     has_many :drafts
     has_many :fighters, through: :drafts
 
+    def wins
+        battles.select { |battle| battle.winner_id == id }
+    end
+
+    def wins_count
+        wins.count
+    end
+
+    def player_wins
+        wins.map { |win| win.winner_id == win.team_id }
+    end
+
+    def player_wins_count
+        player_wins.count
+    end
+
+
     def set_team_name
         team_names = drafts.map { |draft| draft.fighter.name }
         team_names.sort
@@ -34,7 +51,13 @@ class Team < ActiveRecord::Base
     #     connection.execute(send(:sanitize_sql_array, sql_array))
     # end
 
+    def self.teams_with_wins
+        Team.all.select { |team| team.wins.count > 0 }
+    end
 
+    def self.fighters_from_teams_with_wins
+        teams_with_wins.map { |team| team.fighters }.flatten.uniq
+    end
 
 
 end
