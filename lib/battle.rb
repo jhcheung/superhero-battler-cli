@@ -1,9 +1,9 @@
 class Battle < ActiveRecord::Base
     belongs_to :team
     belongs_to :opponent, class_name: 'Team'
-    after_initialize :three_random_tests
+    after_initialize :three_random_tests, :set_test_results, :determine_winner
 
-    attr_reader :tests
+    attr_reader :tests, :results
 
     def competition_hash
         {
@@ -32,17 +32,16 @@ class Battle < ActiveRecord::Base
     # end
 
     def determine_winner
-        test_results.values.count(true) > test_results.values.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
+        results.values.count(true) > results.values.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
         self.save
-        test_results
     end
 
     def three_random_tests
         @tests = competition_hash.keys.sample(3)
     end
 
-    def test_results
-        tests.reduce({}) do |new_hash, test| 
+    def set_test_results
+        @results = tests.reduce({}) do |new_hash, test| 
             new_hash[test] = competition_hash[test] 
             new_hash 
         end
