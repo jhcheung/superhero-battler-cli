@@ -69,8 +69,8 @@ class CLI
     end
 
     def menu_prompt
-        menu_response = prompt.select("Menu", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) unless current_team
-        menu_response = prompt.select("You are currently logged in as #{current_player.name}.\nYour current team is #{@pastel.green(current_team.name)}", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) if current_team
+        menu_response = prompt.select("Menu", ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]) unless current_team
+        menu_response = prompt.select("You are currently logged in as #{@pastel.green(current_player.name)}.\nYour current team is #{@pastel.green(current_team.name)}", ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]) if current_team
 
         case menu_response
         when "Battle" 
@@ -81,6 +81,8 @@ class CLI
         when "Leaderboard"
             leaderboard_menu if Team.all.any?
             puts "There have been no battles! You need to battle first for there to be a leaderboard." unless Team.all.any?
+        when "My Account"
+            account_menu
         when "Log Out"
             logout
         when "Exit"
@@ -159,7 +161,7 @@ class CLI
     end
 
     def player_menu(player_name)
-        menu_response = prompt.select("Choose a team", [Player.find_by(name: player_name).teams.pluck(:name)], "Cancel")
+        menu_response = prompt.select("Choose a team", [Player.find_by(name: player_name).teams.pluck(:name), "Cancel"])
         case menu_response
         when "Cancel"
         else 
@@ -215,6 +217,39 @@ class CLI
             puts word.rjust(spacing)
         end
     end
+
+    def account_menu
+        user_response = prompt.select("Manage your account", [ "Change name", "Delete account", "Cancel"])
+        case user_response
+        when "Change name"
+            change_name
+        when "Delete account"
+            delete_confirmation = prompt.yes?("Are you suuuuuure????")
+            if delete_confirmation
+                current_player.destroy
+                puts "You have successfully deleted your account. Logging out in five seconds"
+                sleep(5)
+                logout
+            else
+                puts "OK. Welcome back, I guess." 
+            end
+        when "Cancel"
+
+        end
+    end
+
+    def change_name
+        user_response = prompt.ask("Enter your new name or type \"cancel\" to quit")
+        if user_response.downcase == "cancel"
+            
+        elsif Player.find_by(name: user_response)
+            puts "#{user_response} is already a user! Please try again."
+            change_name
+        else
+            current_player.name = user_response
+            current_player.save    
+        end
+    end
   
     def delete_character_menu
         if current_player.teams.empty?
@@ -240,12 +275,14 @@ class CLI
     end
 
     def leaderboard_menu
-        menu_response = prompt.select("Display a leaderboard", "Team", "Player", "Back")
+        menu_response = prompt.select("Display a leaderboard", "Team", "Player", "Fighter", "Back")
         case menu_response
         when "Team"
             puts Leaderboard.new.render_table("construct_team_leaderboard")
         when "Player"
             puts Leaderboard.new.render_table("construct_player_leaderboard")
+        when "Fighter"
+            puts Leaderboard.new.render_table("construct_fighter_leaderboard")
         when "Back"
             #doing nothing returns to while loop
         end

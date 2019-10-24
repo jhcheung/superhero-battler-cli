@@ -73,7 +73,11 @@ class Battle < ActiveRecord::Base
         player_battles_won.map { |battle| battle.team_id }
     end
 
-
+    def self.wins_find_by_fighter(fighter)
+        fighter.team_ids.map do |id|
+            Battle.all.select { |battle| battle.winner_id == id }
+        end.flatten
+    end
 
 end
 
