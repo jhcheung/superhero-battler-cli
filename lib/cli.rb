@@ -1,5 +1,5 @@
 class CLI
-    attr_accessor :prompt, :logged_in, :current_player, :current_team
+    attr_accessor :prompt, :logged_in, :current_player, :current_team, :pastel
 
     def clear_cli
         puts "\e[H\e[2J"
@@ -45,7 +45,7 @@ class CLI
     end
 
     def player_name_prompt
-        prompt.ask("Enter your name to log in, or enter \"create\" to create a new player >")
+        prompt.ask("Enter your name to log in, or enter \"create\" to create a new player")
     end
 
     def create_player_name_prompt
@@ -62,13 +62,11 @@ class CLI
         Player.create(name: user_response)
         set_current_player(user_response)
         login_routine
-
     end
 
     def check_current_team
         @current_team = current_player.teams.find_by(last_team: true)
     end
-
 
     def menu_prompt
         menu_response = prompt.select("Menu", ["Battle", "My Teams", "Leaderboard", "Logout", "Exit"]) unless current_team
@@ -77,7 +75,7 @@ class CLI
         case menu_response
         when "Battle" 
             battle_menu if current_team
-            puts "You do not currently have a team! Please create one before battling again." unless current_team
+            puts "You do not currently have a team! Please create one to battle." unless current_team
         when "My Teams"
             my_teams_menu
         when "Leaderboard"
@@ -106,7 +104,7 @@ class CLI
         elsif fighter
             Draft.create(team_id: current_team.id, fighter_id: fighter.id)
         else 
-            puts "404 not found"
+            puts "There is no such hero/villain with this name. Please try again."
         end
 
         current_team.print_composite if current_team.drafts.count == 3
@@ -124,7 +122,7 @@ class CLI
             current_team.set_team_name
             current_team.set_last_team
         elsif menu_response == "Delete"
-            delete_menu
+            delete_character_menu
         elsif menu_response == "Cancel"
             #doing nothing returns to main menu
         else 
@@ -134,21 +132,18 @@ class CLI
     end
 
     def battle_menu
-        menu_response = prompt.select("Choose a mode", ["Choose a player", "Random"])
+        menu_response = prompt.select("Choose a battle mode", ["Battle a player", "Random", "Back"])
         case menu_response
-        when "Choose a player"
+        when "Battle a player"
             battle_player_menu
         when "Random"
             random_opponent_id = (Player.player_ids_with_teams - [current_player.id]).sample
             opponent_team = Player.find(random_opponent_id).teams.sample
             puts "Your team is #{@pastel.green(current_team.name)}!"
             conduct_battle(current_team, opponent_team)
-            # winner = Team.find(winner_id)
-            # if winner == current_team
-            #     puts "You have won! Congrats!"
-            # else 
-            #     puts "You were defeated. Better luck next time."
-            # end
+            # add end screen that requires tty-reader?
+        when "Back"
+            # nothing returns to menu
         end
     end
 
@@ -157,9 +152,9 @@ class CLI
         @battle_player_instance = Player.find_by(name: menu_response)
         case menu_response
         when "Cancel"
-
+            battle_menu
         else
-            player_menu(menu_response)     
+            player_menu(menu_response)
         end
     end
 
@@ -168,29 +163,24 @@ class CLI
         case menu_response
         when "Cancel"
         else 
-            conduct_battle(current_team, Team.find_by(player: @battle_player_instance, name: menu_response))
+            opponent_team = Team.find_by(player: @battle_player_instance, name: menu_response)
+            puts "Your team is #{@pastel.green(current_team.name)}!"
+            puts "Your opponent is #{@pastel.red(opponent_team.name)}!"
+            conduct_battle(current_team, opponent_team)
         end
     end
 
     def conduct_battle(team, opponent)
         battle = Battle.create(team: team, opponent: opponent)
-        battlehash = battle.competition_hash
-
-        test1 = battlehash.keys.sample
-        test2 = (battlehash.keys - [test1]).sample
-        test3 = (battlehash.keys - [test1, test2]).sample
-        results = battle.determine_winner(test1, test2, test3)
-        announce_test_winner(results, battle, test1)
-        announce_test_winner(results, battle, test2)
-        announce_test_winner(results, battle, test3)
-        winner_id = battle.winner_id
-        winner = Team.find(winner_id)
-
-        if winner == current_team
-            puts @pastel.green("You have won! Congratulations!")
-        else 
-            puts @pastel.red("You were defeated. Better luck next time.")
+        results = battle.results
+        battle.tests.each do |test|
+            announce_test_winner(results, battle, test)
         end
+
+        winner = Team.find(battle.winner_id)
+
+        puts @pastel.green("Your team has defeated the team of #{opponent.name} in #{results.values.(true)} of #{results.count} tests! Congratulations!") if winner == current_team 
+        puts @pastel.red("You were defeated in #{results.values.count(false)} of #{results.count} tests. Better luck next time.") unless winner == current_team
         winner
     end
 
@@ -200,19 +190,21 @@ class CLI
             testwinner = battle.team 
             sleep(1)
             puts "#{@pastel.green(testwinner.name)} has won this test of #{test}!"
+            puts
             sleep(1)
         else 
             testwinner = battle.opponent
             sleep(1)
             puts "#{@pastel.red(testwinner.name)} has won this test of #{test}!"
+            puts
             sleep(1)
+
         end
-        testwinner
     end
     
-    def battle_proclamation(key, opp)
-        puts "Your team of #{current_team.name} is facing #{opp.name} in a test of #{key}!"   
-        fighting_sounds
+
+    def battle_proclamation(test, opponent)
+        puts "You are facing off in a test of #{test}!"
     end
 
     def fighting_sounds
@@ -223,8 +215,8 @@ class CLI
             puts word.rjust(spacing)
         end
     end
-    
-    def delete_menu
+  
+    def delete_character_menu
         if current_player.teams.empty?
             puts "You have nothing to delete!"
             my_teams_menu
@@ -235,7 +227,7 @@ class CLI
                 my_teams_menu
             when current_team.name 
                 puts "You can't delete your currently selected team!"
-                delete_menu
+                delete_character_menu
             else
                 confirmation = prompt.yes?('Are you sure?!?!')
                 if confirmation
@@ -248,7 +240,7 @@ class CLI
     end
 
     def leaderboard_menu
-        menu_response = prompt.select("Choose a leaderboard", "Team", "Player", "Back")
+        menu_response = prompt.select("Display a leaderboard", "Team", "Player", "Back")
         case menu_response
         when "Team"
             puts Leaderboard.new.render_table("construct_team_leaderboard")

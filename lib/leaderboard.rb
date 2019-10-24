@@ -1,8 +1,8 @@
 class Leaderboard
 
-    # def self.teams_leaderboard_array
-    #     Team.execute_sql("SELECT teams.name, COUNT(*) FROM teams JOIN battles ON winner_id = teams.id GROUP BY teams.name")
-    # end
+    attr_reader :table
+
+    # make instance methods in player/team/etc to better refactor
 
 
     def construct_team_leaderboard
@@ -12,12 +12,9 @@ class Leaderboard
             count = Battle.where(winner_id: team.id).count
             table_array << [ team.name, count]
         end
-        table_array = table_array.sort_by { |row| row[1] }.reverse
-        
-        table_array.each_with_index do |row, index|
-            @table << [ index + 1, row ].flatten
-        end
-        @table
+        table_array = order_table_and_delete_zeroes(table_array)
+        make_table_with_ranks(table_array)
+        table
     end
 
     def construct_player_leaderboard
@@ -29,13 +26,20 @@ class Leaderboard
             end 
             table_array << [ player.name, wins.count]
         end
+        table_array = order_table_and_delete_zeroes(table_array)
+        make_table_with_ranks(table_array)
+        table
+    end
+
+    def order_table_and_delete_zeroes(table_array)
         table_array = table_array.sort_by { |row| row[1] }.reverse
         table_array = table_array.select { |row| row[1] > 0 }
+    end
 
+    def make_table_with_ranks(table_array)
         table_array.each_with_index do |row, index|
-            @table << [ index + 1, row ].flatten
+            table << [ index + 1, row ].flatten
         end
-        @table
     end
 
     def render_table(method)
