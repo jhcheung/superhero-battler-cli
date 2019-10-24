@@ -178,7 +178,6 @@ class CLI
         end
 
         winner = Team.find(battle.winner_id)
-
         puts @pastel.green("Your team has defeated the team of #{opponent.name} in #{results.values.(true)} of #{results.count} tests! Congratulations!") if winner == current_team 
         puts @pastel.red("You were defeated in #{results.values.count(false)} of #{results.count} tests. Better luck next time.") unless winner == current_team
         winner
@@ -205,6 +204,7 @@ class CLI
 
     def battle_proclamation(test, opponent)
         puts "You are facing off in a test of #{test}!"
+        fighting_sounds
     end
 
     def fighting_sounds
