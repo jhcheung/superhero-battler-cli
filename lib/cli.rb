@@ -13,6 +13,7 @@ class CLI
         login_routine
         while @logged_in
             menu_prompt 
+       
         end
     end
 
@@ -72,7 +73,7 @@ class CLI
         when "Leaderboard"
             leaderboard_menu if Team.all.any?
             puts "There have been no battles! You need to battle first for there to be a leaderboard." unless Team.all.any?
-        when "Logout"
+        when "Log Out"
             logout
         when "Exit"
             goodbye
@@ -190,16 +191,30 @@ class CLI
         battle_proclamation(test, battle.opponent)
         if battlehash[test]
             testwinner = battle.team 
+            sleep(1)
             puts "#{@pastel.green(testwinner.name)} has won this test of #{test}!"
+            sleep(1)
         else 
             testwinner = battle.opponent
+            sleep(1)
             puts "#{@pastel.red(testwinner.name)} has won this test of #{test}!"
+            sleep(1)
         end
         testwinner
     end
     
     def battle_proclamation(key, opp)
         puts "Your team of #{current_team.name} is facing #{opp.name} in a test of #{key}!"   
+        fighting_sounds
+    end
+
+    def fighting_sounds
+        words = ["pow!", "zang!", "boom!"]
+        words.shuffle.each do |word|
+            sleep(1)
+            spacing = rand(40)
+            puts word.rjust(spacing)
+        end
     end
     
     def delete_menu
