@@ -7,7 +7,8 @@ class CLI
 
     def greet
         clear_cli
-        puts "Welcome to Jimmy and Nick's Superhero Battle App!"
+        greeting = RubyFiglet::Figlet.new "Jimmy  and  Nick's \n Superhero  Battle  App!"
+        puts greeting
     end
 
     def start_program
