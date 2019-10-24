@@ -170,7 +170,7 @@ class CLI
 
     def conduct_battle(team, opponent)
         battle = Battle.create(team: team, opponent: opponent)
-        results = battle.determine_winner
+        results = battle.results
         battle.tests.each do |test|
             announce_test_winner(results, battle, test)
         end
@@ -196,7 +196,7 @@ class CLI
     end
     
     def battle_proclamation(test, opponent)
-        puts "You are facing off in a test of #{test}!"   
+        puts "You are facing off in a test of #{test}!"
     end
     
     def delete_character_menu
