@@ -23,6 +23,16 @@ class CommandLineInterface
         "\n\n"
     end
 
+    def space_and_put(string)
+        puts
+        puts string
+        puts
+    end
+
+    def line_break
+        puts "=" * 124
+    end
+
     def greet #title screen and setup of pastel/font, which we will use through
         clear_cli
         @font = TTY::Font.new(:straight)
@@ -39,7 +49,7 @@ class CommandLineInterface
         puts
     end
 
-    def start_program
+    def start_program #main running method that will register/login users and loop menu until logout
         @prompt = TTY::Prompt.new(active_color: :cyan)
         login_create_process
         while @logged_in
@@ -47,7 +57,7 @@ class CommandLineInterface
         end
     end
 
-    def login_create_process
+    def login_create_process #lets user create or login to an account
         user_response = prompt.ask("Enter your username to log in, or enter #{pastel.magenta("create")} to create a new player", required: true)
         case 
         when user_response.downcase == "create" 
@@ -60,14 +70,18 @@ class CommandLineInterface
         end
     end
 
-    def login_routine(username)
+    def login_routine(username) #stuff that happens every time someone logs in.
         @logged_in = true
         set_current_player(username)
         check_current_team
     end
 
-    def set_current_player(player_name)
+    def set_current_player(player_name) #sets the current_player variable in this CLI session to the appropriate player
         @current_player = Player.find_by(name: player_name)
+    end
+
+    def check_current_team #sets the current team of the session to the current team of the user, as tracked by the database
+        @current_team = current_player.teams.find_by(last_team: true)
     end
 
     def create_player_name_prompt
@@ -85,11 +99,8 @@ class CommandLineInterface
         login_routine(user_response)
     end
 
-    def check_current_team
-        @current_team = current_player.teams.find_by(last_team: true)
-    end
 
-    def menu_prompt
+    def menu_prompt #backbone of rogram which provides options and also restricts options based on variables
         choices = ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]
         menu_response = prompt.select("You are currently logged in as #{@pastel.green(current_player.name)}.\nMenu", choices) unless current_team
         intro_with_current_team = "You are currently logged in as #{@pastel.green(current_player.name)}.\nYour current team is #{@pastel.green(current_team.name)}" if current_team
@@ -97,9 +108,10 @@ class CommandLineInterface
 
         case menu_response
         when "Battle" 
-            battle_menu if current_team && Player.players_with_teams.length > 1 
+            battle_menu if current_team && Player.players_with_teams.length > 1 #battle menu only accessible if there is more than one players with teams
             if !current_team
                 puts indented("You do not currently have a team! Please create one to battle.")
+                five_second_wait
             end
             if !(Player.players_with_teams.length > 1)
                 puts indented("There are no other players with teams for you to battle right now. Please make some friends to play this game with.")  
@@ -110,7 +122,7 @@ class CommandLineInterface
         when "My Teams"
             my_teams_menu
         when "Leaderboard"
-            leaderboard_menu if Battle.all.any?
+            leaderboard_menu if Battle.all.any? #cannot access leaderboard if there are no battles
             puts indented("There have been no battles! You need to battle first for there to be a leaderboard.") unless Battle.all.any?
             ten_second_wait unless Battle.all.any?
             puts
@@ -124,46 +136,19 @@ class CommandLineInterface
         end
     end
     
-    def current_player_teams
-        current_player.teams.reload.map { |team| team.name } 
+    def current_player_teams #method that checks for players teams for the purposes of the menu selections
+        current_player.teams.reload.pluck(:name)
     end
 
-    def current_player_teams_without_current_team
+    def current_player_teams_without_current_team #method that checks for players teams and excludes current team
         current_player_teams - [current_team.name]
-    end
-
-    def create_team_menu
-        fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or #{@pastel.magenta("random")} for a surprise.", required: true)
-        fighter = Fighter.find_by("LOWER(fighters.name)= ? ", fighter_response.downcase)
-        if fighter_response == "random"
-            draft = Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
-            phrase = "#{@pastel.green(draft.fighter.name)} has randomly joined your team!"
-            puts indented(phrase)
-        elsif current_team.fighters.include?(fighter)
-            puts indented("You already have #{fighter.name} on your team! Please try again.")
-        elsif fighter
-            draft = Draft.create(team_id: current_team.id, fighter_id: fighter.id)
-            phrase = "#{@pastel.green(draft.fighter.name)} has been joined your team!"
-            puts indented(phrase)
-        else 
-            puts indented("There is no such hero/villain with this name. Please try again.")
-        end
-
-        if current_team.drafts.count == 3
-            current_team.print_composite
-            current_team.set_team_name
-            current_team.set_last_team
-            puts
-            puts font.write("#{current_team.name}")
-        end
-        create_team_menu unless current_team.drafts.count == 3
     end
 
     def my_teams_menu
         choices_no_team = [ "Create a team", current_player_teams, "Delete", "Cancel" ]
         choices = [
             "Create a team", 
-            { name: @pastel.blue(current_team.name), value: current_team.name, disabled: "This is already your selected team!"},
+            { name: @pastel.blue(current_team.name), value: current_team.name, disabled: "This is already your selected team!"}, #disables selection to prevent a selection that wouldn't really do anything.
              current_player_teams_without_current_team, "Delete", "Cancel"
             ] if current_team
         menu_response = prompt.select("Manage your Teams", choices_no_team ) if !current_team
@@ -183,12 +168,38 @@ class CommandLineInterface
             team_confirmation
         end
     end
-    
+
     def team_confirmation
         puts indented("You've successfully changed your team to #{@pastel.green(current_team.name)}")
         five_second_wait
     end
 
+    def create_team_menu
+        fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or #{@pastel.magenta("random")} for a surprise.", required: true)
+        fighter = Fighter.find_by("LOWER(fighters.name)= ? ", fighter_response.downcase) #finds the fighter by comparing db entry with the response. sql needed to downcase name from entry
+        if fighter_response == "random"
+            draft = Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
+            phrase = "#{@pastel.green(draft.fighter.name)} has randomly joined your team!"
+            puts indented(phrase)
+        elsif current_team.fighters.include?(fighter) #prevents adding the same fighter twice
+            puts indented("You already have #{fighter.name} on your team! Please try again.")
+        elsif fighter
+            draft = Draft.create(team_id: current_team.id, fighter_id: fighter.id)
+            phrase = "#{@pastel.green(draft.fighter.name)} has been joined your team!"
+            puts indented(phrase)
+        else 
+            puts indented("There is no such hero/villain with this name. Please try again.")
+        end
+
+        if current_team.drafts.count == 3 #this will mark the team being completed, so will run things that we want afterwards.
+            current_team.set_team_name
+            current_team.set_last_team
+            current_team.print_composite
+            space_and_put(font.write("#{current_team.name}"))
+        end
+        create_team_menu unless current_team.drafts.count ==  3 #will to loop to create 3 drafts for your team
+    end
+    
     def delete_character_menu
         if current_player.teams.empty?
             puts indented("You have nothing to delete!")
@@ -196,7 +207,7 @@ class CommandLineInterface
             my_teams_menu
         elsif
             choices = [
-                { name: @pastel.red(current_team.name), value: current_team.name, disabled: "You cannot delete your currently selected team."},
+                { name: @pastel.red(current_team.name), value: current_team.name, disabled: "You cannot delete your currently selected team."}, #disallow deleting current_team to prevent situation with no current_team
                 current_player_teams_without_current_team, "Cancel"
             ]
             delete_team = prompt.select("Delete a Team", choices)
@@ -224,8 +235,8 @@ class CommandLineInterface
         choices = [ "Random battle", "Battle a player", "Cancel" ]
         menu_response = prompt.select("Choose a battle mode", choices)
         case menu_response
-        when "Random battle"
-            random_opponent_id = (Player.player_ids_with_teams - [current_player.id]).sample
+        when "Random battle" 
+            random_opponent_id = (Player.player_ids_with_teams - [current_player.id]).sample 
             opponent_team = Player.find(random_opponent_id).teams.sample
             puts indented("Your team is #{@pastel.green(current_team.name)}!")
             conduct_battle(current_team, opponent_team)
@@ -254,23 +265,13 @@ class CommandLineInterface
         when "Cancel"
             battle_player_menu
         else 
-            opponent_team = Team.find_by(player: @battle_player_instance, name: menu_response)
+            opponent = Team.find_by(player: @battle_player_instance, name: menu_response)
             puts indented("Your team is #{@pastel.green(current_team.name)}!")
-            conduct_battle(current_team, opponent_team)
+            conduct_battle(current_team, opponent)
         end
     end
 
-    def space_and_put(string)
-        puts
-        puts string
-        puts
-    end
-
-    def line_break
-        puts "=" * 124
-    end
-
-    def conduct_battle(team, opponent)
+    def conduct_battle(team, opponent) #creates new battle instance and puts results from that
         puts indented("Your opponent is #{@pastel.red(opponent.name)}!")
         battle = Battle.create(team: team, opponent: opponent)
 
@@ -301,8 +302,8 @@ class CommandLineInterface
         ten_second_wait
     end
 
-    def announce_test_winner(results, battle, test)
-        battle_proclamation(test, battle.opponent)
+    def announce_test_winner(results, battle, test) #prints results from passed in test
+        battle_proclamation(test)
         if results[test]
             testwinner = battle.team 
             sleep(1)
@@ -319,16 +320,16 @@ class CommandLineInterface
     end
     
 
-    def battle_proclamation(test, opponent)
+    def battle_proclamation(test) #declares test and prints fighting sounds
         puts "You are facing off in a test of #{test}!"
         fighting_sounds
     end
 
     def fighting_sounds
-        words = ["pow!", "zang!", "boom!", "kablam", "katang", "hoom", "ping", "wham", "thwip"]
+        words = ["POW!", "ZANG!", "BOOM!", "KABLAM!", "KATANG!", "HOOM!", "PING!", "WHAM!", "THWIP!"]
         words.shuffle.sample(3).each do |word|
             sleep(1)
-            spacing = rand(70)
+            spacing = rand(70) #creates arandom number of indentations
             puts word.rjust(spacing)
         end
     end
@@ -347,7 +348,7 @@ class CommandLineInterface
                 sleep(5)
                 logout
             else
-                puts "OK. Welcome back, I guess." 
+                puts "OK. Welcome back, I guess." #lol
             end
         when "Cancel"
             #return to main
@@ -383,7 +384,7 @@ class CommandLineInterface
             leaderboard_menu
         when "Player"
             puts Leaderboard.new.render_table("construct_player_leaderboard") if Player.all.sum(&:wins_count) > 0
-            puts indented("No player has any wins yet! 😢") unless Player.all.sum(&:wins_count) > 0
+            puts indented("No player has any wins yet! 😢") unless Player.all.sum(&:wins_count) > 0 # shows nothing except this line with no player wins
             ten_second_wait
             leaderboard_menu
         when "Fighter"

@@ -2,16 +2,16 @@ class Fighter < ActiveRecord::Base
     has_many :drafts
     has_many :teams, through: :drafts
 
-    def superhero_image_dir
+    def superhero_image_dir #ternary statment, returns the name of the picture (which is set to id.jpg) or use placeholder
         File.exist?("./imgs/#{id}.jpg") ? "./imgs/#{self.id}.jpg" : "./imgs/placeholder_both.jpg"
     end
 
-    def print_fighter_image
+    def print_fighter_image 
         Catpix.print_image(superhero_image_dir, {limit_x: 0.50, limit_y: 0.50, resolution: "high", center_x: true})
         puts name.center(50)
     end
 
-    def self.print_composite_image(f1, f2, f3)
+    def self.print_composite_image(f1, f2, f3) #montages three fighter images using rmagick/imagemagick
         image_list = Magick::ImageList.new(f1.superhero_image_dir, f2.superhero_image_dir, f3.superhero_image_dir)
         image_list = image_list.montage do
             |image| image.tile="1x3", image.background_color = "black", self.geometry = "130x194+10+5"
