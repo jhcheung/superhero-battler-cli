@@ -87,8 +87,10 @@ class CLI
     end
 
     def menu_prompt
-        menu_response = prompt.select("Menu", ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]) unless current_team
-        menu_response = prompt.select("You are currently logged in as #{@pastel.green(current_player.name)}.\nYour current team is #{@pastel.green(current_team.name)}", ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]) if current_team
+        choices = ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]
+        menu_response = prompt.select("Menu", choices ) unless current_team
+        intro_with_current_team = "You are currently logged in as #{@pastel.green(current_player.name)}.\nYour current team is #{@pastel.green(current_team.name)}"
+        menu_response = prompt.select(intro_with_current_team, choices) if current_team
 
         case menu_response
         when "Battle" 
