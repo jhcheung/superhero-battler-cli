@@ -7,7 +7,8 @@ class Fighter < ActiveRecord::Base
     end
 
     def print_fighter_image
-        Catpix.print_image(superhero_image_dir, {limit_x: 0.50, limit_y: 0.50, resolution: "high"})
+        Catpix.print_image(superhero_image_dir, {limit_x: 0.50, limit_y: 0.50, resolution: "high", center_x: true, center_y: true})
+        puts name.center(50)
     end
 
     def self.print_composite_image(f1, f2, f3)
@@ -18,11 +19,14 @@ class Fighter < ActiveRecord::Base
         # image_list.write("./imgs/#{id1}_#{id2}_#{id3}.png")
         # Catpix.print_image("./imgs/#{id1}_#{id2}_#{id3}.png", {limit_x: 0.90, limit_y: 0.90, resolution: "high"})
         image_list = Magick::ImageList.new(f1.superhero_image_dir, f2.superhero_image_dir, f3.superhero_image_dir)
+        # image_list[0]['Label'] = f1.name
+        # image_list[1]['Label'] = f2.name
+        # image_list[2]['Label'] = f3.name
         image_list = image_list.montage do
             |image| image.tile="1x3", image.background_color = "black", self.geometry = "130x194+10+5"
         end
         image_list.write("./imgs/#{f1.id}_#{f2.id}_#{f3.id}.png")
-        Catpix.print_image("./imgs/#{f1.id}_#{f2.id}_#{f3.id}.png", {limit_x: 0.90, limit_y: 0.90, resolution: "high"})
+        Catpix.print_image("./imgs/#{f1.id}_#{f2.id}_#{f3.id}.png", {limit_x: 0.90, limit_y: 0.90, resolution: "high", center_x: true})
     end
 
     def drafts
@@ -33,11 +37,11 @@ class Fighter < ActiveRecord::Base
         drafts.map { |draft| draft.team.id }
     end
 
-    def wins_count
+    def wins_count #based on overall wins
         # Battle.includes(team: [:fighters]).select do |battle| 
         #     team_ids.include?(battle.winner_id) 
         # end
-        teams.sum(&:wins_count)
+        teams.sum(&:overall_wins_count)
     end
 
     def self.fighters_with_wins
