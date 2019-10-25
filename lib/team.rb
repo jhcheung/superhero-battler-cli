@@ -25,7 +25,6 @@ class Team < ActiveRecord::Base
 
     def set_team_name
         team_names = drafts.map { |draft| draft.fighter.name }
-        team_names.sort
         self.name = team_names.join(" | ")  
         save      
     end

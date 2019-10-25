@@ -1,7 +1,7 @@
 class Battle < ActiveRecord::Base
     belongs_to :team
     belongs_to :opponent, class_name: 'Team'
-    after_initialize :three_random_tests, :set_test_results, :determine_winner
+    after_create :three_random_tests, :set_test_results, :determine_winner 
 
     attr_reader :tests, :results
 

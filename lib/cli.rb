@@ -1,7 +1,7 @@
 class CommandLineInterface
-    attr_accessor :prompt, :logged_in, :current_player, :current_team, :pastel, :font
+    attr_accessor :prompt, :logged_in, :current_player, :current_team, :pastel, :font, :font2
 
-    def clear_cli
+    def clear_cli #function to clear cli and have black screen
         puts "\e[H\e[2J"
     end
 
@@ -18,20 +18,23 @@ class CommandLineInterface
     end
 
     def indented(phrase)
-        phrase.rjust(phrase.length + 5)
+        "\n" +
+        phrase.rjust(phrase.length + 5) +
+        "\n\n"
     end
 
-    def greet
+    def greet #title screen and setup of pastel/font, which we will use through
         clear_cli
         @font = TTY::Font.new(:straight)
+        @font2 = TTY::Font.new(:standard)
         @pastel = Pastel.new
-        greeting = pastel.yellow(font.write "Jimmy and Nick's Superhero Battler!")
-        # greetingl2 = pastel.yellow(font.write "Superhero")
-        # greetingl3 = pastel.yellow(font.write "Battler!")
+        greeting = pastel.red(font2.write "Jimmy and Nick's")
+        greetingl2 = (font2.write "                 Superhero")
+        greetingl3 = pastel.cyan(font2.write "                      Battler!")
         line_break
         puts greeting
-        # puts greetingl2
-        # puts greetingl3
+        puts greetingl2
+        puts greetingl3
         line_break
         puts
     end
@@ -45,7 +48,7 @@ class CommandLineInterface
     end
 
     def login_create_process
-        user_response = prompt.ask("Enter your username to log in, or enter \"create\" to create a new player")
+        user_response = prompt.ask("Enter your username to log in, or enter #{pastel.magenta("create")} to create a new player", required: true)
         case 
         when user_response.downcase == "create" 
             create_player_name_prompt
@@ -88,8 +91,8 @@ class CommandLineInterface
 
     def menu_prompt
         choices = ["Battle", "My Teams", "Leaderboard", "My Account", "Log Out", "Exit"]
-        menu_response = prompt.select("Menu", choices ) unless current_team
-        intro_with_current_team = "You are currently logged in as #{@pastel.green(current_player.name)}.\nYour current team is #{@pastel.green(current_team.name)}"
+        menu_response = prompt.select("You are currently logged in as #{@pastel.green(current_player.name)}.\nMenu", choices) unless current_team
+        intro_with_current_team = "You are currently logged in as #{@pastel.green(current_player.name)}.\nYour current team is #{@pastel.green(current_team.name)}" if current_team
         menu_response = prompt.select(intro_with_current_team, choices) if current_team
 
         case menu_response
@@ -130,21 +133,20 @@ class CommandLineInterface
     end
 
     def create_team_menu
-        fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or #{@pastel.magenta("random")} for a surprise.")
+        fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or #{@pastel.magenta("random")} for a surprise.", required: true)
         fighter = Fighter.find_by("LOWER(fighters.name)= ? ", fighter_response.downcase)
         if fighter_response == "random"
             draft = Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
             phrase = "#{@pastel.green(draft.fighter.name)} has randomly joined your team!"
             puts indented(phrase)
-            puts 
+        elsif current_team.fighters.include?(fighter)
+            puts indented("You already have #{fighter.name} on your team! Please try again.")
         elsif fighter
             draft = Draft.create(team_id: current_team.id, fighter_id: fighter.id)
             phrase = "#{@pastel.green(draft.fighter.name)} has been joined your team!"
             puts indented(phrase)
-            puts
         else 
-            puts "There is no such hero/villain with this name. Please try again."
-            puts
+            puts indented("There is no such hero/villain with this name. Please try again.")
         end
 
         if current_team.drafts.count == 3
@@ -178,7 +180,13 @@ class CommandLineInterface
         else 
             @current_team = Team.find_by(name: menu_response)
             current_team.set_last_team
+            team_confirmation
         end
+    end
+    
+    def team_confirmation
+        puts indented("You've successfully changed your team to #{@pastel.green(current_team.name)}")
+        five_second_wait
     end
 
     def delete_character_menu
@@ -201,9 +209,10 @@ class CommandLineInterface
             else
                 confirmation = prompt.yes?('Are you sure?!?!')
                 if confirmation
-                    team = Team.find_by(name: delete_team, id: current_player.id)
-                    binding.pry
+                    team = Team.find_by(name: delete_team, player_id: current_player.id)
                     Team.destroy(team.id)
+                    puts indented("You have successfully deleted your team of #{delete_team}.")
+                    ten_second_wait
                 end
                 my_teams_menu
             end
@@ -271,9 +280,9 @@ class CommandLineInterface
         team.print_composite
         puts
         puts
-        space_and_put(font.write("#{team.name}"))
-        puts (font.write("VS."))
-        space_and_put(font.write("#{opponent.name}"))
+        space_and_put pastel.green((font.write("                                #{team.name}")))
+        puts (font.write("                                VS."))
+        space_and_put pastel.red((font.write("                                #{opponent.name}")))
         puts
         puts
         opponent.print_composite
@@ -346,15 +355,21 @@ class CommandLineInterface
     end
 
     def change_name
-        user_response = prompt.ask("Enter your new name or type \"cancel\" to quit")
+        user_response = prompt.ask("Enter your new name or type \"cancel\" to quit", required: true)
         if user_response.downcase == "cancel"
-            
+            puts indented("OK. Your name has not been changed.")
         elsif Player.find_by(name: user_response)
             puts "#{user_response} is already a user! Please try again."
             change_name
         else
-            current_player.name = user_response
-            current_player.save    
+            confirmation = prompt.yes?('Are you sure?!?!')
+            if confirmation
+                current_player.name = user_response
+                current_player.save
+                puts indented("Your name has successfully been changed to #{@pastel.green(user_response)}")
+            else
+                puts indented("OK. Your name has not been changed.")
+            end
         end
     end  
 
