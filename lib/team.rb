@@ -23,7 +23,6 @@ class Team < ActiveRecord::Base
         player_wins.count
     end
 
-
     def set_team_name
         team_names = drafts.map { |draft| draft.fighter.name }
         team_names.sort
@@ -47,10 +46,6 @@ class Team < ActiveRecord::Base
         Fighter.print_composite_image(self.fighters[0], self.fighters[1], self.fighters[2])
     end
 
-    # def self.execute_sql(*sql_array)     
-    #     connection.execute(send(:sanitize_sql_array, sql_array))
-    # end
-
     def self.teams_with_wins
         Team.all.select { |team| team.overall_wins.count > 0 }
     end
@@ -58,15 +53,4 @@ class Team < ActiveRecord::Base
     def self.fighters_from_teams_with_wins
         teams_with_wins.map { |team| team.fighters }.flatten.uniq
     end
-
-
 end
-
-
-#notes
-#use tty table in iteration
-# iterate over all battles and check count.
-    
-# has_many :battles, foreign_key: opponent_id, class_name: 'Battle'
-# has_many :opponents, through: :battles
-# has_many :userteams, through: :battles
