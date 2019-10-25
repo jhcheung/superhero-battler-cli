@@ -18,19 +18,6 @@ class Battle < ActiveRecord::Base
         }
     end
 
-    # def determine_winner(testarray)
-    #     results = testarray.map { |test| competition_hash[test] }
-
-    #     # test_results = { test1 => nil, test2 => nil, test3 => nil }
-    #     # test_results = test_results.reduce({}) do |new_hash, (key, value)|
-    #     #     new_hash[key] = self.competition_hash[key]
-    #     #     new_hash
-    #     # end
-    #     results.count(true) > testarray.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
-    #     self.save
-    #     testarray
-    # end
-
     def determine_winner
         results.values.count(true) > results.values.count(false) ? self.winner_id = team.id : self.winner_id = opponent.id
         self.save

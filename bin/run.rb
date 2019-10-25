@@ -7,6 +7,6 @@ require_relative '../config/environment'
 # binding.pry
 # Fighter.print_composite_image(fighter1, fighter2,fighter3)
 # Fighter.print_composite_image(620,644,442)
-cli = CLI.new
+cli = CommandLineInterface.new
 cli.greet
 cli.start_program

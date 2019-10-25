@@ -1,4 +1,4 @@
-class CLI
+class CommandLineInterface
     attr_accessor :prompt, :logged_in, :current_player, :current_team, :pastel, :font
 
     def clear_cli

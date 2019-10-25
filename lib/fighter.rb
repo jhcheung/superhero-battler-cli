@@ -7,7 +7,7 @@ class Fighter < ActiveRecord::Base
     end
 
     def print_fighter_image
-        Catpix.print_image(superhero_image_dir, {limit_x: 0.50, limit_y: 0.50, resolution: "high", center_x: true, center_y: true})
+        Catpix.print_image(superhero_image_dir, {limit_x: 0.50, limit_y: 0.50, resolution: "high", center_x: true})
         puts name.center(50)
     end
 

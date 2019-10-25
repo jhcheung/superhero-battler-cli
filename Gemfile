@@ -10,15 +10,12 @@ gem "faker"
 gem "rake"
 gem "tty-prompt"
 gem "catpix"
-gem "colorize"
 gem "rest-client"
 gem "down"
 gem "fileutils"
 gem "rmagick"
 gem "pastel"
-gem "seed_dump"
 gem "tty-table"
-gem "ruby_figlet", "~> 0.6.1"
 gem 'tty-font'
 
 

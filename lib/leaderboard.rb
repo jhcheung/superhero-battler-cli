@@ -2,9 +2,6 @@ class Leaderboard
 
     attr_reader :table
 
-    # make instance methods in player/team/etc to better refactor
-
-
     def construct_team_leaderboard
         @table = TTY::Table.new header: ["Rank", "Team", "Wins"]
         table_array = []
