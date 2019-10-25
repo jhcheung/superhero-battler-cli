@@ -7,16 +7,16 @@ class Team < ActiveRecord::Base
     has_many :drafts
     has_many :fighters, through: :drafts
 
-    def wins
+    def overall_wins #returns wins, either with the team as an opponent or player
+        Battle.all.select { |battle| battle.winner_id == id }
+    end
+
+    def overall_wins_count
+        overall_wins.count
+    end
+
+    def player_wins #only wins as a player
         battles.select { |battle| battle.winner_id == id }
-    end
-
-    def wins_count
-        wins.count
-    end
-
-    def player_wins
-        wins.map { |win| win.winner_id == win.team_id }
     end
 
     def player_wins_count
@@ -52,7 +52,7 @@ class Team < ActiveRecord::Base
     # end
 
     def self.teams_with_wins
-        Team.all.select { |team| team.wins.count > 0 }
+        Team.all.select { |team| team.overall_wins.count > 0 }
     end
 
     def self.fighters_from_teams_with_wins

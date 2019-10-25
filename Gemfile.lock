@@ -86,6 +86,7 @@ GEM
     tilt (2.0.10)
     tty-color (0.5.0)
     tty-cursor (0.7.0)
+    tty-font (0.4.0)
     tty-prompt (0.19.0)
       necromancer (~> 0.5.0)
       pastel (~> 0.7.0)
@@ -131,6 +132,7 @@ DEPENDENCIES
   seed_dump
   sinatra-activerecord
   sqlite3 (~> 1.4)
+  tty-font
   tty-prompt
   tty-table
 

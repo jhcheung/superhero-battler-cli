@@ -1,5 +1,5 @@
 class CLI
-    attr_accessor :prompt, :logged_in, :current_player, :current_team, :pastel
+    attr_accessor :prompt, :logged_in, :current_player, :current_team, :pastel, :font
 
     def clear_cli
         puts "\e[H\e[2J"
@@ -7,13 +7,20 @@ class CLI
 
     def greet
         clear_cli
-        greeting = RubyFiglet::Figlet.new "Jimmy  and  Nick's \n Superhero  Battle  App!"
+        @font = TTY::Font.new(:straight)
+        @pastel = Pastel.new
+        greeting = pastel.yellow(font.write "Jimmy and Nick's Superhero Battler!")
+        # greetingl2 = pastel.yellow(font.write "Superhero")
+        # greetingl3 = pastel.yellow(font.write "Battler!")
+        line_break
         puts greeting
+        # puts greetingl2
+        # puts greetingl3
+        line_break
     end
 
     def start_program
-        @prompt = TTY::Prompt.new
-        @pastel = Pastel.new
+        @prompt = TTY::Prompt.new(active_color: :cyan)
         login_create_process
         while @logged_in
             menu_prompt 
@@ -30,7 +37,7 @@ class CLI
             set_current_player(user_response)
             login_routine
         else
-            puts "Not a valid player name, maybe create a new user 🤷 >"
+            puts "Not a valid player name, maybe create a new user 🤷"
             create_player_name_prompt
         end
     end
@@ -45,11 +52,11 @@ class CLI
     end
 
     def player_name_prompt
-        prompt.ask("Enter your name to log in, or enter \"create\" to create a new player")
+        prompt.ask("Enter your username to log in, or enter \"create\" to create a new player")
     end
 
     def create_player_name_prompt
-        user_response = prompt.ask("Enter your name >")
+        user_response = prompt.ask("Enter a new username")
         if Player.find_by(name: user_response)
             puts "#{user_response} is already a user! Please try again."
             login_create_process
@@ -64,6 +71,14 @@ class CLI
         login_routine
     end
 
+    def ten_second_wait
+        prompt.keypress("Press any key to return to menu, resumes automatically in 10 seconds ...", timeout: 10)
+    end
+
+    def five_second_wait
+        prompt.keypress("Press any key to return to menu, resumes automatically in 5 seconds ...", timeout: 5)
+    end
+
     def check_current_team
         @current_team = current_player.teams.find_by(last_team: true)
     end
@@ -74,13 +89,18 @@ class CLI
 
         case menu_response
         when "Battle" 
-            battle_menu if current_team
+            battle_menu if current_team && Player.players_with_teams.length > 1 
             puts "You do not currently have a team! Please create one to battle." unless current_team
+            puts "There are no other players with teams for you to battle right now. Please make some friends to play this game with." unless Player.players_with_teams.length > 1 
+            ten_second_wait
+            line_break
         when "My Teams"
             my_teams_menu
         when "Leaderboard"
-            leaderboard_menu if Team.all.any?
-            puts "There have been no battles! You need to battle first for there to be a leaderboard." unless Team.all.any?
+            leaderboard_menu if Battle.all.any?
+            puts "There have been no battles! You need to battle first for there to be a leaderboard." unless Battle.all.any?
+            ten_second_wait
+            line_break
         when "My Account"
             account_menu
         when "Log Out"
@@ -102,14 +122,22 @@ class CLI
         fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or \"random\" for a surprise.")
         fighter = Fighter.find_by("LOWER(fighters.name)= ? ", fighter_response.downcase)
         if fighter_response == "random"
-            Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
+            draft = Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
+            phrase = "#{@pastel.green(draft.fighter.name)} has randomly joined your team!"
+            puts phrase.rjust(phrase.length + 5)
+            puts 
         elsif fighter
-            Draft.create(team_id: current_team.id, fighter_id: fighter.id)
+            draft = Draft.create(team_id: current_team.id, fighter_id: fighter.id)
+            phrase = "#{@pastel.green(draft.fighter.name)} has been joined your team!"
+            puts phrase.rjust(phrase.length + 5)
+            puts
         else 
             puts "There is no such hero/villain with this name. Please try again."
+            puts
         end
 
         current_team.print_composite if current_team.drafts.count == 3
+        space_and_put(@pastel.green(current_team.name)) if current_team.drafts.count == 3
         create_team_menu unless current_team.drafts.count == 3
     end
 
@@ -132,6 +160,7 @@ class CLI
             current_team.set_last_team
         end
     end
+
 
     def battle_menu
         menu_response = prompt.select("Choose a battle mode", ["Battle a player", "Random", "Back"])
@@ -167,22 +196,48 @@ class CLI
         else 
             opponent_team = Team.find_by(player: @battle_player_instance, name: menu_response)
             puts "Your team is #{@pastel.green(current_team.name)}!"
-            puts "Your opponent is #{@pastel.red(opponent_team.name)}!"
             conduct_battle(current_team, opponent_team)
         end
     end
 
+    def space_and_put(string)
+        puts
+        puts string
+        puts
+    end
+
+    def line_break
+        puts "=" * 124
+    end
+
     def conduct_battle(team, opponent)
+        puts "Your opponent is #{@pastel.red(opponent.name)}!"
         battle = Battle.create(team: team, opponent: opponent)
+
+        line_break
+        puts
+        puts
+        team.print_composite
+        puts
+        puts
+        space_and_put(font.write("#{team.name}"))
+        puts font.write("VS.")
+        space_and_put(font.write("#{opponent.name}"))
+        puts
+        puts
+        opponent.print_composite
+        puts
+        puts
+        line_break
+
         results = battle.results
         battle.tests.each do |test|
             announce_test_winner(results, battle, test)
         end
 
         winner = Team.find(battle.winner_id)
-        puts @pastel.green("Your team has defeated the team of #{opponent.name} in #{results.values.(true)} of #{results.count} tests! Congratulations!") if winner == current_team 
+        puts @pastel.green("Your team has defeated the team of #{opponent.name} in #{results.values.count(true)} of #{results.count} tests! Congratulations!") if winner == current_team 
         puts @pastel.red("You were defeated in #{results.values.count(false)} of #{results.count} tests. Better luck next time.") unless winner == current_team
-        winner
     end
 
     def announce_test_winner(results, battle, test)
@@ -191,15 +246,14 @@ class CLI
             testwinner = battle.team 
             sleep(1)
             puts "#{@pastel.green(testwinner.name)} has won this test of #{test}!"
-            puts
-            sleep(1)
+            prompt.keypress("Press any key to continue, resumes automatically in 5 seconds ...", timeout: 5)
+            line_break
         else 
             testwinner = battle.opponent
             sleep(1)
             puts "#{@pastel.red(testwinner.name)} has won this test of #{test}!"
-            puts
-            sleep(1)
-
+            prompt.keypress("Press any key to continue, resumes automatically in 5 seconds ...", timeout: 5)
+            line_break
         end
     end
     
@@ -210,10 +264,10 @@ class CLI
     end
 
     def fighting_sounds
-        words = ["pow!", "zang!", "boom!"]
-        words.shuffle.each do |word|
+        words = ["pow!", "zang!", "boom!", "kablam", "katang", "hoom", "ping", "wham", "thwip"]
+        words.shuffle.sample(3).each do |word|
             sleep(1)
-            spacing = rand(40)
+            spacing = rand(70)
             puts word.rjust(spacing)
         end
     end
@@ -266,7 +320,7 @@ class CLI
             else
                 confirmation = prompt.yes?('Are you sure?!?!')
                 if confirmation
-                    team = Team.find_by(name: delete_team)
+                    team = Team.find_by(name: delete_team, id: current_player.id)
                     Team.destroy(team.id)
                 end
                 my_teams_menu

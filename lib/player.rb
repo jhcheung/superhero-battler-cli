@@ -26,9 +26,5 @@ class Player < ActiveRecord::Base
         self.all.select { |player| player.teams.count > 0 }        
     end
 
-    def delete_everything
-        
-    end
-
 end
 
