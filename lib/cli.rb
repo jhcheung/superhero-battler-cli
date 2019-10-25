@@ -65,7 +65,7 @@ class CommandLineInterface
         when Player.find_by(name: user_response)
             login_routine(user_response)
         else
-            puts indented("Not a valid player name, maybe create a new user 🤷")
+            puts indented("Not currently a user, maybe create a new user 🤷")
             create_player_name_prompt
         end
     end
@@ -86,8 +86,11 @@ class CommandLineInterface
 
     def create_player_name_prompt
         user_response = prompt.ask("Enter a new username")
-        if Player.find_by(name: user_response)
-            puts indented("#{user_response} is already a user! Please try again.")
+        if user_response.downcase == "create"
+            puts indented("#{user_response} cannot be a user name! Please try again.")
+            create_player_name_prompt
+        elsif Player.find_by(name: user_response)
+            puts indented("#{user_response} is already a user! Please either login or create another user.")
             login_create_process
         else
             create_player(user_response)
@@ -178,14 +181,18 @@ class CommandLineInterface
         fighter_response = prompt.ask("Please type in the name of the desired hero/villain! Or #{@pastel.magenta("random")} for a surprise.", required: true)
         fighter = Fighter.find_by("LOWER(fighters.name)= ? ", fighter_response.downcase) #finds the fighter by comparing db entry with the response. sql needed to downcase name from entry
         if fighter_response == "random"
-            draft = Draft.create(team_id: current_team.id, fighter_id: rand(Fighter.all.count))
+            random_fighter = Fighter.find(rand(Fighter.all.count))
+            while current_team.fighters.include?(random_fighter)
+                random_fighter = Fighter.find(rand(Fighter.all.count))
+            end
+            draft = Draft.create(team_id: current_team.id, fighter: random_fighter)
             phrase = "#{@pastel.green(draft.fighter.name)} has randomly joined your team!"
             puts indented(phrase)
         elsif current_team.fighters.include?(fighter) #prevents adding the same fighter twice
             puts indented("You already have #{fighter.name} on your team! Please try again.")
         elsif fighter
             draft = Draft.create(team_id: current_team.id, fighter_id: fighter.id)
-            phrase = "#{@pastel.green(draft.fighter.name)} has been joined your team!"
+            phrase = "#{@pastel.green(draft.fighter.name)} has joined your team!"
             puts indented(phrase)
         else 
             puts indented("There is no such hero/villain with this name. Please try again.")
@@ -343,7 +350,7 @@ class CommandLineInterface
         when "Delete account"
             delete_confirmation = prompt.yes?("Are you suuuuuure????")
             if delete_confirmation
-                current_player.destroy
+                delete_player(current_player)
                 puts "You have successfully deleted your account. Logging out in five seconds"
                 sleep(5)
                 logout
@@ -353,6 +360,14 @@ class CommandLineInterface
         when "Cancel"
             #return to main
         end
+    end
+
+    def delete_player(player)
+        # player.teams do |team| 
+        #     team.drafts { |draft| draft.destroy }
+        #     team.destroy 
+        # end
+        player.destroy
     end
 
     def change_name
