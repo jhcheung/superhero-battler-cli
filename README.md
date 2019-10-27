@@ -4,14 +4,14 @@ Superhero Battler by Nick & Jimmy
 Superhero Battler is a CLI application inspired by autobattler genre games, such as Teamfight Tactics, Auto Chess, and Dota Underlords. In Superhero Battler, players will create a team consisting of three superheroes/supervillains and battle with other players' teams to determine who has the best superhero team!
 
 Superhero Battler uses the Superhero API for powerstats and images:
-https://superheroapi.com
+https://superheroapi.com  
 https://github.com/akabab/superhero-api
 
 Notable gems used:
-TTY/Pastel (especially TTY-prompt) for the fancy user interface
-Catpix for printing superhero images in the terminal
-RMagick/ImageMagick for montaging superhero images and displaying them
-ActiveRecord/Sinatra/SQLite for the OO relationship DB magic
+TTY/Pastel (especially TTY-prompt) for the fancy user interface  
+Catpix for printing superhero images in the terminal  
+RMagick/ImageMagick for montaging superhero images and displaying them  
+ActiveRecord/Sinatra/SQLite for the OO relationship DB magic  
 
 ---
 
@@ -42,13 +42,13 @@ ruby bin/run.rb
 ---
 
 ## Images
-![Optional Text](./screenshots/title screen.png)
+![Title Screen](./screenshots/title-screen.png)
 
-![Optional Text](./screenshots/main menu.png)
+![Main Menu](./screenshots/main-menu.png)
 
-![Optional Text](./screenshots/team creation.png)
+![Team Creation](./screenshots/team-creation.png)
 
-![Optional Text](./screenshots/team battle.png)
+![Team Battle](./screenshots/team-battle.png)
 
-![Optional Text](./screenshots/leaderboard.png)
+![Leaderboards](./screenshots/leaderboard.png)
 
