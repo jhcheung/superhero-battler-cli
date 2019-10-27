@@ -3,7 +3,7 @@ Superhero Battler by Nick & Jimmy
 
 Superhero Battler is a CLI application inspired by autobattler genre games, such as Teamfight Tactics, Auto Chess, and Dota Underlords. In Superhero Battler, players will create a team consisting of three superheroes/supervillains and battle with other players' teams to determine who has the best superhero team!
 
-Superhero Battler uses the Superhero API for powerstats and images:
+Superhero Battler uses the Superhero API for powerstats and images:  
 https://superheroapi.com  
 https://github.com/akabab/superhero-api
 
