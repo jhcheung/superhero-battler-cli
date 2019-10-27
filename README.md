@@ -21,11 +21,11 @@ ActiveRecord/Sinatra/SQLite for the OO relationship DB magic
 ```
 bundle install
 ```
-2. Run the rake task to seed the database with superhero data scraped from Superhero-API
+2. Run the rake task to seed the database with superhero data scraped from Superhero-API.
 ```
 rake db:seed
 ```
-3. This repo does not include superhero images. If you wish to include superhero images, you can run the scraper in "load_superhero_fighters.rb" to download the images yourself. You will need to visit Superhero API to register an access token and replace the ```MyKey.new.superhero_key``` variable with your access token. Please note that some images are missing, as the links in Superhero API provides for those heroes are dead. 
+3. This repo does not include superhero images. If you wish to include superhero images, you can run the scraper in "load_superhero_fighters.rb" to download the images yourself. You will need to visit Superhero API to register an access token and replace the ```ruby MyKey.new.superhero_key``` variable with your access token. Please note that some images are missing, as the links in Superhero API provides for those heroes are dead. 
 ```ruby
 [*1..731].each do |number|
     begin
