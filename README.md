@@ -7,10 +7,10 @@ Superhero Battler uses the Superhero API for powerstats and images:
 https://superheroapi.com  
 https://github.com/akabab/superhero-api
 
-Notable gems used:
-TTY/Pastel (especially TTY-prompt) for the fancy user interface  
-Catpix for printing superhero images in the terminal  
-RMagick/ImageMagick for montaging superhero images and displaying them  
+Notable gems used:  
+[TTY/Pastel](https://ttytoolkit.org/) (especially TTY-prompt) for the fancy user interface  
+[Catpix](https://github.com/pazdera/catpix) for printing superhero images in the terminal  
+[RMagick/ImageMagick](https://github.com/rmagick/rmagick) for montaging superhero images and displaying them  
 ActiveRecord/Sinatra/SQLite for the OO relationship DB magic  
 
 ---
