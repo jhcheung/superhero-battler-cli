@@ -42,3 +42,13 @@ ruby bin/run.rb
 ---
 
 ## Images
+![Optional Text](./screenshots/title screen.png)
+
+![Optional Text](./screenshots/main menu.png)
+
+![Optional Text](./screenshots/team creation.png)
+
+![Optional Text](./screenshots/team battle.png)
+
+![Optional Text](./screenshots/leaderboard.png)
+
