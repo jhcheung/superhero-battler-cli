@@ -12,5 +12,5 @@ tmp
 
 db/*.db
 secretkey.rb
-imgs
+imgs/*
 !imgs/placeholder_both.jpg
